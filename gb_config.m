@@ -115,7 +115,7 @@ addpath('/data/pt_02020/MRI_data/scripts/1_FUNCTIONAL/3_2nd_level_fmri_swe')
 
 config_param.ACTION = action;
 
-% constant
+% configs of lists and strings
 config_param.DATA_DIR = "/data/pt_02020/MRI_data/fmri_wanting_results/1st_level/";
 config_param.DESIGNMATRIX_PATH = ...
     "/data/pt_02020/MRI_data/scripts/1_FUNCTIONAL/3_2nd_level_fmri_swe/Design_Matrix_with_all_confounders.csv"; % scans, also to filter design matrix
@@ -127,70 +127,89 @@ config_param.EXCLUDED = ["allsubs", "excluded_sub-30", ...
     "excluded_sub-47_ses-04", "excluded_sub-30_sub-47_ses-04", ...
     "only_male", "only_female"]; %% adapt for different group of subjects included
 
-% specifications
-config_param.SELECT = false;
-if preset == "prereg"
-    config_param.MODELS = ["modelA", "modelB"]; 
-    config_param.FIRST_LEVEL_CONTRASTS = ["con_0001", "con_0002","con_0003"];
-    config_param.EFFECTS = containers.Map({'interaction'}, {[-1 1 1 -1]});
-    config_param.ROIS = ...
-        containers.Map({'nomask',  'neurosynthraw', 'neurosynthpeak'}, ...
-        {'', ...
+config_param.FIRST_LEVEL_CONTRASTS = ["con_0001", "con_0002", "con_0003", "con_0004", "con_0005"]; 
+
+% effects configs
+effects_keys = {'interaction', 'main'};
+effects_values = {[-1 1 1 -1], [0.25 0.25 0.25 0.25]};
+effects_map = containers.Map(effects_keys, effects_values);
+
+% roi configurations
+rois_keys = {'nomask',  'neurosynthraw', 'neurosynthpeak'};
+rois_values = {'', ...
         '/data/pt_02020/MRI_data/software/ROI_analysis/neurosynth/reward_hypothalamus_merged.nii,1', ...
-        '/data/pt_02020/MRI_data/software/ROI_analysis/neurosynth_peak/reward_hypothalamus_merged_spheres_only.nii,1'});
+        '/data/pt_02020/MRI_data/software/ROI_analysis/neurosynth_peak/reward_hypothalamus_merged_spheres_only.nii,1'};
+rois_map = containers.Map(rois_keys, rois_values);
+
+% posthoc setting
+posthoc_keys = {'SES','FM','VAIAK','PREH','POSTH','WELL', 'FIBER'};
+posthoc_values = {'SES_index', 'FM_stand', 'VAIAK_sum', 'hunger_pre_wanting', 'hunger_post_wanting', 'well_being', 'Fibre_per_1000kcal'};
+posthoc_map = containers.Map(posthoc_keys, posthoc_values);
+
+
+%% presets
+config_param.SELECT = false;
+
+if preset == "prereg"
+    config_param.MODELS = ["modelA","modelB1"]; 
+    config_param.FIRST_LEVEL_CONTRASTS = ["con_0001", "con_0002","con_0003"];
+    effects_keys = {'interaction'};
+    
 elseif preset == "nomask"
     config_param.MODELS = ["modelA", "modelB1", "modelB2", "modelC1", "modelC2"];
     config_param.FIRST_LEVEL_CONTRASTS = ["con_0001", "con_0002", "con_0003", "con_0004", "con_0005"]; 
-    config_param.EFFECTS = containers.Map({'interaction', 'main'}, {[-1 1 1 -1], [0.25 0.25 0.25 0.25]});
-    config_param.ROIS = containers.Map({'nomask'}, ...
-        {'/data/pt_02020/MRI_data/software/ROI_analysis/MNI_mask/MNI152_T1_2mm_brain_mask.nii'});
+    effects_keys = {'interaction', 'main'};
+    rois_keys = {'nomask'};
+    
 elseif preset == "rawmask"
     config_param.MODELS = ["modelA", "modelB1", "modelB2", "modelC1", "modelC2"]; 
     config_param.FIRST_LEVEL_CONTRASTS = ["con_0001", "con_0002", "con_0003", "con_0004", "con_0005"];
-    config_param.EFFECTS = containers.Map({'interaction', 'main'}, {[-1 1 1 -1], [0.25 0.25 0.25 0.25]});
-    config_param.ROIS = containers.Map({'neurosynthraw'}, ...
-        {'/data/pt_02020/MRI_data/software/ROI_analysis/neurosynth/reward_hypothalamus_merged.nii,1'});
+    effects_keys = {'interaction', 'main'};
+    rois_keys = {'neurosynthraw'};
+    
 elseif preset == "peakmask"
     config_param.MODELS = ["modelA", "modelB1", "modelB2", "modelC1", "modelC2"]; 
     config_param.FIRST_LEVEL_CONTRASTS = ["con_0001", "con_0002", "con_0003", "con_0004", "con_0005"];
-    config_param.EFFECTS = containers.Map({'interaction', 'main'}, ...
-        {[-1 1 1 -1], [0.25 0.25 0.25 0.25]});
-    config_param.ROIS = containers.Map({'neurosynthpeak'}, ...
-        {'/data/pt_02020/MRI_data/software/ROI_analysis/neurosynth_peak/reward_hypothalamus_merged_spheres_only.nii,1'});
+    effects_keys = {'interaction', 'main'};
+    rois_keys = {'neurosynthpeak'};
+    
 elseif preset == "manual"
-    config_param.MODELS = ["modelC2"];
-    config_param.FIRST_LEVEL_CONTRASTS = ["con_0001", "con_0002", "con_0003", "con_0004", "con_0005"]; 
-    config_param.EFFECTS = containers.Map({'interaction', 'main'}, ...
-        {[-1 1 1 -1], [0.25 0.25 0.25 0.25]});
-    config_param.ROIS = containers.Map({'nomask',  'neurosynthraw', 'neurosynthpeak'}, ...
-        {'', ...
-        '/data/pt_02020/MRI_data/software/ROI_analysis/neurosynth/reward_hypothalamus_merged.nii,1', ...
-        '/data/pt_02020/MRI_data/software/ROI_analysis/neurosynth_peak/reward_hypothalamus_merged_spheres_only.nii,1'});
+    config_param.CONFOUND = ["no_confound"]; 
+    config_param.EXCLUDED = ["allsubs"];
+    config_param.MODELS = ["modelB2"];
+    config_param.FIRST_LEVEL_CONTRASTS = ["con_0001","con_0002","con_0003"]; 
+    effects_keys = {'interaction', 'main'};
+    rois_keys = {'neurosynthraw'};
+    
 elseif preset == "confound"
     config_param.MODELS = ["modelC1", "modelC2"];
     config_param.FIRST_LEVEL_CONTRASTS = ["con_0001", "con_0002", "con_0003", "con_0004", "con_0005"]; 
-    config_param.EFFECTS = containers.Map({'interaction', 'main'}, ...
-        {[-1 1 1 -1], [0.25 0.25 0.25 0.25]});
-    config_param.ROIS = containers.Map({'neurosynthraw'}, ...
-        {'/data/pt_02020/MRI_data/software/ROI_analysis/neurosynth/reward_hypothalamus_merged.nii,1'});
+    effects_keys = {'interaction', 'main'};
+    rois_keys = {'neurosynthraw'};
     config_param.EXCLUDED = ["only_male", "only_female"];
     config_param.CONFOUND = ["incl_confound"]; 
+    
 elseif preset == "sexes"
     config_param.MODELS = ["modelA", "modelB1", "modelB2", "modelC1", "modelC2"];
     config_param.FIRST_LEVEL_CONTRASTS = ["con_0001", "con_0002", "con_0003", "con_0004", "con_0005"]; 
-    config_param.EFFECTS = containers.Map({'interaction'}, {[-1 1 1 -1]});
-    config_param.ROIS = containers.Map({'neurosynthraw'}, ...
-        {'/data/pt_02020/MRI_data/software/ROI_analysis/neurosynth/reward_hypothalamus_merged.nii,1'});
+    effects_keys = {'interaction'};
+    rois_keys = {'neurosynthraw'};
     config_param.EXCLUDED = ["only_male", "only_female"];
     config_param.CONFOUND = ["no_confound"]; 
+    
+elseif preset == "posthoc"
+    config_param.MODELS = ["modelA"];
+    config_param.FIRST_LEVEL_CONTRASTS = ["con_0001", "con_0002", "con_0003", "con_0004", "con_0005"]; 
+    effects_keys = {'interaction', 'main'};
+    config_param.CONFOUND = ["no_confound"]; 
+    rois_keys = {'neurosynthraw'};
+    config_param.CONFOUND = ["no_confound"];
+    
 elseif preset == "all" || preset == "select"
     config_param.MODELS = ["modelA", "modelB1", "modelB2", "modelC1", "modelC2"];
     config_param.FIRST_LEVEL_CONTRASTS = ["con_0001", "con_0002", "con_0003", "con_0004", "con_0005"]; 
-    config_param.EFFECTS = containers.Map({'interaction', 'main'}, {[-1 1 1 -1], [0.25 0.25 0.25 0.25]});
-    config_param.ROIS = containers.Map({'nomask',  'neurosynthraw', 'neurosynthpeak'}, ...
-        {'/data/pt_02020/MRI_data/software/ROI_analysis/MNI_mask/MNI152_T1_2mm_brain_mask.nii', ...
-        '/data/pt_02020/MRI_data/software/ROI_analysis/neurosynth/reward_hypothalamus_merged.nii,1', ...
-        '/data/pt_02020/MRI_data/software/ROI_analysis/neurosynth_peak/reward_hypothalamus_merged_spheres_only.nii,1'});
+    effects_keys = {'interaction', 'main'};
+    rois_keys = {'nomask',  'neurosynthraw', 'neurosynthpeak'};
     config_param.CONFOUND = ["no_confound", "incl_confound"]; 
     
     if preset == "select"
@@ -203,21 +222,17 @@ elseif preset == "all" || preset == "select"
         config_param.FIRST_LEVEL_CONTRASTS = config_param.FIRST_LEVEL_CONTRASTS(indx);
         sumok = sumok + tf;
 
-        effectskeys = config_param.EFFECTS.keys;
-        effectsvalues = config_param.EFFECTS.values;
-        [indx,tf] = listdlg('ListString',config_param.EFFECTS.keys);
-        config_param.EFFECTS = containers.Map(effectskeys(indx), effectsvalues(indx));
+        [indx,tf] = listdlg('ListString', effects_keys);
+        effects_keys = effects_keys(indx);
         sumok = sumok + tf;
 
-        roikeys = config_param.ROIS.keys;
-        roivalues = config_param.ROIS.values;
-        [indx,tf] = listdlg('ListString',config_param.ROIS.keys);
-        config_param.ROIS = containers.Map(roikeys(indx), roivalues(indx));
+        [indx,tf] = listdlg('ListString', rois_keys);
+        rois_keys = rois_keys(indx);
         sumok = sumok + tf;
         
-        confoundermap = containers.Map(cellstr(config_param.CONFOUND), {'none', 'age/ sex/ SES index'});
-        [indx,tf] = listdlg('ListString', confoundermap.values);
-        tmpvar = confoundermap.keys;
+        confounder_map = containers.Map(cellstr(config_param.CONFOUND), {'none', 'age/ sex/ SES index'});
+        [indx,tf] = listdlg('ListString', confounder_map.values);
+        tmpvar = confounder_map.keys;
         config_param.CONFOUND = convertCharsToStrings(tmpvar(indx));
         sumok = sumok + tf;
         
@@ -264,9 +279,15 @@ else
     return
 end
 
+%% selected configurations
+config_param.EFFECTS = containers.Map(effects_keys, values(effects_map, effects_keys));
+config_param.POSTHOC = containers.Map(posthoc_keys, values(posthoc_map, posthoc_keys));
+config_param.ROIS = containers.Map(rois_keys, values(rois_map, rois_keys));
+
 
 %% create separate runs
 runs = gb_build_runs(config_param);
-gb_process_runs(runs, parprocess)
+disp("...done.")
+%gb_process_runs(runs, parprocess)
 
 end
